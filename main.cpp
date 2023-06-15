@@ -20,77 +20,85 @@ int getPlayerInput(std::vector<int> & availableBoxes);
 int  checkValidInput();
 bool checkDigit(char check);
 char winner(const std::vector<char>  & board);
+std::string TiePhrase();
+std::string WinPhrase();
+std::string LoosePhrase();
 
 int main(){
 
-    char player;
-    char IA;
+    
 
-    int playerInput{};
-    int IA_Input{};
+    do{
+        char player;
+        char IA;
 
-    std::vector<char> board (NUM_SQUARES,EMPTY);
-    std::vector<int> availableBoxes = {0,1,2,3,4,5,6,7,8};
-    char winState = 'N';
-    //First turn is X turn
-    char actualTurn = PLAYER_X;
+        int playerInput{};
+        int IA_Input{};
 
-    Welcome();
+        std::vector<char> board (NUM_SQUARES,EMPTY);
+        std::vector<int> availableBoxes = {0,1,2,3,4,5,6,7,8};
+        char winState = 'N';
+        //First turn is X turn
+        char actualTurn = PLAYER_X;
 
-    //Get player and IA symbol
-    player = GetPlayerSymbol();
-    IA = player==PLAYER_X? PLAYER_O : PLAYER_X;
+        Welcome();
 
-    std::cout<<"\nPlayer: "<<player<<std::endl;
-    std::cout<<"IA: "<<IA<<std::endl;
+        //Get player and IA symbol
+        player = GetPlayerSymbol();
+        IA = player==PLAYER_X? PLAYER_O : PLAYER_X;
 
+        std::cout<<"\nPlayer: "<<player<<std::endl;
+        std::cout<<"IA: "<<IA<<std::endl;
+        while(winState == NO_ONE){ 
+        
+            
+            if(actualTurn == player){
+                std::cout<<std::endl<<"It is your turn"<<std::endl;
+                DrawChoiceBoard(board); 
+                std::cout<<"Pick a box: "<<std::endl;
+                playerInput = getPlayerInput(availableBoxes);
+                board[playerInput] = player;
+                actualTurn = IA;
+            }
+            else{
+                std::cout<<std::endl<<"It is my turn"<<std::endl;
+                DrawChoiceBoard(board); 
+                int randomIAIndex = rand()%availableBoxes.size();
+                IA_Input = availableBoxes[randomIAIndex];
+                board[IA_Input] = IA;
+                std::cout<<"I picked: "<<availableBoxes[randomIAIndex]<<std::endl;
+                availableBoxes.erase(availableBoxes.begin() + randomIAIndex);
+                actualTurn = player;
+            }
+            
+            
+            winState = winner(board);
 
-    while(winState == NO_ONE){ 
-       
+        } 
+        std::cout<<"\nFinal board"<<std::endl;
         DrawChoiceBoard(board); 
-        if(actualTurn == player){
-            std::cout<<std::endl<<"It is your turn, pick a box"<<std::endl;
-            playerInput = getPlayerInput(availableBoxes);
-            board[playerInput] = player;
-            actualTurn = IA;
+        if(winState == TIE){
+            std::cout<<"\nIt's a Tie"<<std::endl;
+            std::cout<<TiePhrase()<<std::endl;
         }
         else{
-            std::cout<<std::endl<<"It is my turn"<<std::endl;
-            int randomIAIndex = rand()%availableBoxes.size();
-            IA_Input = availableBoxes[randomIAIndex];
-            board[IA_Input] = IA;
-            availableBoxes.erase(availableBoxes.begin() + randomIAIndex);
-            actualTurn = player;
+            if(winState == IA){
+                std::cout<<"And I have won!!"<<std::endl;
+                std::cout<<LoosePhrase()<<std::endl;
+            }
+            else{
+                std::cout<<"And you have won, what a a surprise"<<std::endl;
+                std::cout<<WinPhrase()<<std::endl;
+            }
         }
-        
-        
-        winState = winner(board);
-
-    } 
-    std::cout<<"\nFinal board"<<std::endl;
-    DrawChoiceBoard(board); 
-    if(winState == TIE){
-        std::cout<<"\nIt's a Tie"<<std::endl;
-        //Add salty IA rechallenge
-    }
-    else{
-        if(winState == IA){
-            std::cout<<"And I have won!!"<<std::endl;
-            //Add a random IA win phrase
-        }
-        else{
-            std::cout<<"And you have won, what a a surprise!!";
-            //Add salty IA loose phares 
-        }
-    }
-
+    }while(AskYesNo("Do you want to play again?"));
     
     return 0;
 }
 
 void Welcome(){
 
-    std::cout<<"****Welcome to TicTacToe****"<<std::endl;
+    std::cout<<"\n\n\n\n\n\n\n****Welcome to TicTacToe****"<<std::endl;
     std::cout<<"Today you will be facing me, get ready"<<std::endl;
 
 }
@@ -123,6 +131,16 @@ bool AskYesNo(std::string question)
     
 }
 void DrawChoiceBoard(std::vector<char> board){
+
+            
+    std::cout<<"_____________"<<std::endl;
+    std::cout<<"| 0 | 1 | 2 | "<<std::endl;
+    std::cout<<"_____________"<<std::endl;
+    std::cout<<"| 3 | 4 | 5 | "<<std::endl;
+    std::cout<<"_____________"<<std::endl;
+    std::cout<<"| 6 | 7 | 8 | "<<std::endl;
+    std::cout<<"_____________"<<std::endl;
+
     
     std::cout<<"_____________"<<std::endl;
     std::cout<<"| "<< board[0]<<" | "<<board[1]<<" | "<<board[2]<<" | "<<std::endl;
@@ -138,7 +156,6 @@ int getPlayerInput(std::vector<int> & availableBoxes){
     bool isBoxedUsed = true;
     int spaceToErase{};
 
-    std::cout<<"Pick a box: ";
 
     do{
         temporalPlayerInput = checkValidInput();
@@ -211,5 +228,31 @@ char winner(const std::vector<char>  & board){
     //Default
     return 'T';
    
+}
+
+std::string TiePhrase(){
+    
+    std::vector<std::string> phrase = {"Is this the best you can do?","Booooring, let's play again", "Let's do it again, I need to win", "It isn't winning but still better than loose", "I was just warming up, let's do it again"};
+    
+    //Random choices
+    srand(static_cast<unsigned int>(time(0)));
+    int randomIndex = rand()%phrase.size();
+    return phrase[randomIndex];
+}
+std::string WinPhrase(){
+    std::vector<std::string> phrase = {"Better than i expected","You're truly the best", "Perfection must be your last name", "Imposible no one can defeat me", "You got lucky, next time I'll win", "Trully unexpected", "Pure luck, let me show you"};
+
+    //Random choices
+    srand(static_cast<unsigned int>(time(0)));
+    int randomIndex = rand()%phrase.size();
+    return phrase[randomIndex];
+}
+std::string LoosePhrase(){
+        std::vector<std::string> phrase = {"Ez", "Skill issues?", "As expected", "Like if you ever got an oportunity", "Do you want to loose again?", "This is skill at its biggest", "And once again I prove my supperiority"};
+
+    //Random choices
+    srand(static_cast<unsigned int>(time(0)));
+    int randomIndex = rand()%phrase.size();
+    return phrase[randomIndex];
 }
 
