@@ -25,9 +25,7 @@ std::string WinPhrase();
 std::string LoosePhrase();
 
 int main(){
-
     
-
     do{
         char player;
         char IA;
@@ -49,10 +47,12 @@ int main(){
 
         std::cout<<"\nPlayer: "<<player<<std::endl;
         std::cout<<"IA: "<<IA<<std::endl;
+        
         while(winState == NO_ONE){ 
         
             
             if(actualTurn == player){
+                //Player turn
                 std::cout<<std::endl<<"It is your turn"<<std::endl;
                 DrawChoiceBoard(board); 
                 std::cout<<"Pick a box: "<<std::endl;
@@ -61,13 +61,14 @@ int main(){
                 actualTurn = IA;
             }
             else{
+                //IA turn
                 std::cout<<std::endl<<"It is my turn"<<std::endl;
                 DrawChoiceBoard(board); 
-                int randomIAIndex = rand()%availableBoxes.size();
-                IA_Input = availableBoxes[randomIAIndex];
+                int randomIA_Index = rand()%availableBoxes.size();
+                IA_Input = availableBoxes[randomIA_Index];
                 board[IA_Input] = IA;
-                std::cout<<"I picked: "<<availableBoxes[randomIAIndex]<<std::endl;
-                availableBoxes.erase(availableBoxes.begin() + randomIAIndex);
+                std::cout<<"I picked: "<<availableBoxes[randomIA_Index]<<std::endl;
+                availableBoxes.erase(availableBoxes.begin() + randomIA_Index);
                 actualTurn = player;
             }
             
@@ -75,6 +76,7 @@ int main(){
             winState = winner(board);
 
         } 
+
         std::cout<<"\nFinal board"<<std::endl;
         DrawChoiceBoard(board); 
         if(winState == TIE){
@@ -132,7 +134,7 @@ bool AskYesNo(std::string question)
 }
 void DrawChoiceBoard(std::vector<char> board){
 
-            
+    std::cout<<"Box numbers: "<<std::endl;        
     std::cout<<"_____________"<<std::endl;
     std::cout<<"| 0 | 1 | 2 | "<<std::endl;
     std::cout<<"_____________"<<std::endl;
@@ -141,7 +143,7 @@ void DrawChoiceBoard(std::vector<char> board){
     std::cout<<"| 6 | 7 | 8 | "<<std::endl;
     std::cout<<"_____________"<<std::endl;
 
-    
+    std::cout<<"Actual board: "<<std::endl;    
     std::cout<<"_____________"<<std::endl;
     std::cout<<"| "<< board[0]<<" | "<<board[1]<<" | "<<board[2]<<" | "<<std::endl;
     std::cout<<"_____________"<<std::endl;
