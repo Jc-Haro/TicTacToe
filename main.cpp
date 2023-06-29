@@ -4,6 +4,7 @@
 #include<vector>
 #include<time.h>
 #include<string>
+#include<algorithm>
 
 const int NUM_SQUARES = 9;
 const char EMPTY = ' ';
@@ -16,83 +17,45 @@ void Welcome();
 char GetPlayerSymbol();
 void DrawChoiceBoard(std::vector<char> board);
 bool AskYesNo(std::string question);
-int getPlayerInput(std::vector<int> & availableBoxes);
+int getPlayerInput(const std::vector<char> & board);
+int _IATurn(std::vector<char> board, char IA, char player);
 int  checkValidInput();
 bool checkDigit(char check);
 char winner(const std::vector<char>  & board);
 std::string TiePhrase();
 std::string WinPhrase();
 std::string LoosePhrase();
+void AnounceWinner(std::vector<char> board, char winState, char IA, char player);
+void IATurn(std::vector<char> &board, char IA, char player);
+void PlayerTurn(std::vector<char> &board, char player);
+void chooseSimbols(char &player, char &IA);
 
 int main(){
     
     do{
-        char player;
-        char IA;
-
-        int playerInput{};
-        int IA_Input{};
-
+        char player{};
+        char IA{};
         std::vector<char> board (NUM_SQUARES,EMPTY);
-        std::vector<int> availableBoxes = {0,1,2,3,4,5,6,7,8};
-        char winState = 'N';
-        //First turn is X turn
-        char actualTurn = PLAYER_X;
+        char winState = NO_ONE; 
+        char actualTurn = PLAYER_X;     //First turn is X turn
 
         Welcome();
 
-        //Get player and IA symbol
-        player = GetPlayerSymbol();
-        IA = player==PLAYER_X? PLAYER_O : PLAYER_X;
-
-        std::cout<<"\nPlayer: "<<player<<std::endl;
-        std::cout<<"IA: "<<IA<<std::endl;
+        chooseSimbols(player,IA);
         
-        while(winState == NO_ONE){ 
-        
-            
+        while(winState == NO_ONE){  
+            DrawChoiceBoard(board); 
             if(actualTurn == player){
-                //Player turn
-                std::cout<<std::endl<<"It is your turn"<<std::endl;
-                DrawChoiceBoard(board); 
-                std::cout<<"Pick a box: "<<std::endl;
-                playerInput = getPlayerInput(availableBoxes);
-                board[playerInput] = player;
-                actualTurn = IA;
+                PlayerTurn(board,player);
             }
             else{
-                //IA turn
-                std::cout<<std::endl<<"It is my turn"<<std::endl;
-                DrawChoiceBoard(board); 
-                int randomIA_Index = rand()%availableBoxes.size();
-                IA_Input = availableBoxes[randomIA_Index];
-                board[IA_Input] = IA;
-                std::cout<<"I picked: "<<availableBoxes[randomIA_Index]<<std::endl;
-                availableBoxes.erase(availableBoxes.begin() + randomIA_Index);
-                actualTurn = player;
+                IATurn(board, IA, player);
             }
-            
-            
+            actualTurn = actualTurn==player? IA : player;       
             winState = winner(board);
-
         } 
-
-        std::cout<<"\nFinal board"<<std::endl;
-        DrawChoiceBoard(board); 
-        if(winState == TIE){
-            std::cout<<"\nIt's a Tie"<<std::endl;
-            std::cout<<TiePhrase()<<std::endl;
-        }
-        else{
-            if(winState == IA){
-                std::cout<<"And I have won!!"<<std::endl;
-                std::cout<<LoosePhrase()<<std::endl;
-            }
-            else{
-                std::cout<<"And you have won, what a a surprise"<<std::endl;
-                std::cout<<WinPhrase()<<std::endl;
-            }
-        }
+        AnounceWinner(board, winState, IA, player);
+        
     }while(AskYesNo("Do you want to play again?"));
     
     return 0;
@@ -152,7 +115,7 @@ void DrawChoiceBoard(std::vector<char> board){
     std::cout<<"| "<< board[6]<<" | "<<board[7]<<" | "<<board[8]<<" | "<<std::endl;
     std::cout<<"_____________"<<std::endl;
 }
-int getPlayerInput(std::vector<int> & availableBoxes){
+int getPlayerInput(const std::vector<char> & board){
     
     int temporalPlayerInput{};
     bool isBoxedUsed = true;
@@ -161,19 +124,16 @@ int getPlayerInput(std::vector<int> & availableBoxes){
 
     do{
         temporalPlayerInput = checkValidInput();
-        for(int i = 0; i<availableBoxes.size(); i++){
-            if(availableBoxes[i]==temporalPlayerInput){
-                isBoxedUsed = false;
-                spaceToErase = i;
-            }
-        }
-        if(isBoxedUsed){
+        if(board[temporalPlayerInput] != EMPTY){
             std::cout<<"That boxed is already used"<<std::endl;
         }
-
+        else{
+            isBoxedUsed = false;
+        }
+        
     }while(isBoxedUsed);
 
-    availableBoxes.erase(availableBoxes.begin() + spaceToErase);
+
 
     return temporalPlayerInput;
     
@@ -233,7 +193,6 @@ char winner(const std::vector<char>  & board){
 }
 
 std::string TiePhrase(){
-    
     std::vector<std::string> phrase = {"Is this the best you can do?","Booooring, let's play again", "Let's do it again, I need to win", "It isn't winning but still better than loose", "I was just warming up, let's do it again"};
     
     //Random choices
@@ -250,7 +209,7 @@ std::string WinPhrase(){
     return phrase[randomIndex];
 }
 std::string LoosePhrase(){
-        std::vector<std::string> phrase = {"Ez", "Skill issues?", "As expected", "Like if you ever got an oportunity", "Do you want to loose again?", "This is skill at its biggest", "And once again I prove my supperiority"};
+    std::vector<std::string> phrase = {"Ez", "Skill issues?", "As expected", "Like if you ever got an oportunity", "Do you want to loose again?", "This is skill at its biggest", "And once again I prove my supperiority"};
 
     //Random choices
     srand(static_cast<unsigned int>(time(0)));
@@ -258,3 +217,99 @@ std::string LoosePhrase(){
     return phrase[randomIndex];
 }
 
+int _IATurn(std::vector<char> board, char IA, char player){
+
+    int move = 0;
+    
+
+    while(move < board.size()){
+        if(board[move] == EMPTY){
+            board[move] = IA;
+            if(winner(board)==IA){
+                return move;
+            }
+            else{
+                board[move] = EMPTY;
+            }
+        }
+        move++;
+    }
+
+    move = 0;
+    while(move < board.size()){
+        
+        if(board[move] == EMPTY){
+            board[move] = player;
+            if(winner(board)==player){
+                return move;
+            }
+            else{
+                board[move] = EMPTY;
+            }
+        }
+        move++;
+    }
+
+    if(board[4]== EMPTY){ //Board center
+        return 4;
+    }
+
+    std::vector<int> bestChoices = {0,2,4,8}; //Board corners
+    std::random_shuffle(bestChoices.begin(), bestChoices.end());
+    for(int i = 0; i<bestChoices.size(); i++){
+        if(board[bestChoices[i]]== EMPTY){
+            return bestChoices[i];
+        }
+    }
+
+    std::vector<int> lastChoices = {1,3,5,7}; //Board cross
+    std::random_shuffle(lastChoices.begin(), lastChoices.end());
+    for(int i = 0; i<lastChoices.size(); i++){
+        if(board[lastChoices[i]] == EMPTY){
+            return lastChoices[i];
+        }
+    }
+    
+
+    return 0;
+}
+
+void AnounceWinner(std::vector<char> board, char winState, char IA, char player){
+    std::cout<<"\nFinal board"<<std::endl;
+        DrawChoiceBoard(board); 
+        if(winState == TIE){
+            std::cout<<"\nIt's a Tie"<<std::endl;
+            std::cout<<TiePhrase()<<std::endl;
+        }
+        else{
+            if(winState == IA){
+                std::cout<<"And I have won!!"<<std::endl;
+                std::cout<<LoosePhrase()<<std::endl;
+            }
+            else{
+                std::cout<<"And you have won, what a a surprise"<<std::endl;
+                std::cout<<WinPhrase()<<std::endl;
+            }
+        }
+}
+void IATurn(std::vector<char> &board, char IA, char player){
+    int IA_Input{};
+    std::cout<<std::endl<<"It is my turn"<<std::endl; 
+    IA_Input = _IATurn(board, IA, player);
+    std::cout<<"I have picked: "<<IA_Input<<std::endl;
+    board[IA_Input] = IA;
+}
+void PlayerTurn(std::vector<char> &board, char player){
+    int playerInput{};
+    std::cout<<std::endl<<"It is your turn"<<std::endl;
+    std::cout<<"Pick a box: "<<std::endl;
+    playerInput = getPlayerInput(board);
+    board[playerInput] = player;
+}
+
+void chooseSimbols(char &player, char &IA){
+    player = GetPlayerSymbol();
+    IA = player==PLAYER_X? PLAYER_O : PLAYER_X;
+    std::cout<<"\nPlayer: "<<player<<std::endl;
+    std::cout<<"IA: "<<IA<<std::endl;
+}
